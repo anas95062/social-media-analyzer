@@ -1,0 +1,6 @@
+Flask
+pytesseract
+pdfplumber
+Pillow
+google-generativeai
+gunicorn
