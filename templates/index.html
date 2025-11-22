@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Analyzer</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 1rem; }
+        .box { border: 2px dashed #ccc; padding: 2rem; text-align: center; cursor: pointer; border-radius: 8px; }
+        .box:hover { background: #f9f9f9; border-color: #007bff; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        button:disabled { background: #ccc; }
+        .hidden { display: none; }
+        pre { background: #f4f4f4; padding: 1rem; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Social Media Content Analyzer</h1>
+    <div class="box" id="dropZone">
+        <p>Click to Select or Drag File Here (PDF/Image)</p>
+        <input type="file" id="fileInput" class="hidden" accept=".pdf,.jpg,.png">
+    </div>
+    <p id="fname" style="text-align:center; color:blue;"></p>
+    <div style="text-align:center;">
+        <button id="analyzeBtn">Analyze</button>
+        <div id="loader" class="hidden">Processing... please wait...</div>
+    </div>
+    <div id="results" class="hidden">
+        <h3>Suggestions:</h3>
+        <div id="analysis"></div>
+        <h3>Extracted Text:</h3>
+        <pre id="text"></pre>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+
+        dropZone.onclick = () => fileInput.click();
+        fileInput.onchange = () => { if(fileInput.files.length) document.getElementById('fname').innerText = fileInput.files[0].name; };
+
+        analyzeBtn.onclick = async () => {
+            if(!fileInput.files.length) return alert("Please select a file");
+            analyzeBtn.disabled = true;
+            document.getElementById('loader').classList.remove('hidden');
+            document.getElementById('results').classList.add('hidden');
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const res = await fetch('/analyze', { method: 'POST', body: formData });
+                const data = await res.json();
+                if(data.error) throw new Error(data.error);
+
+                document.getElementById('text').innerText = data.extracted_text;
+                document.getElementById('analysis').innerHTML = data.analysis.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                document.getElementById('results').classList.remove('hidden');
+            } catch(e) {
+                alert(e.message);
+            } finally {
+                analyzeBtn.disabled = false;
+                document.getElementById('loader').classList.add('hidden');
+            }
+        };
+    </script>
+</body>
+</html>
