@@ -36,7 +36,7 @@ def analyze_content(text):
     if not GENAI_API_KEY:
         return "AI Key Missing. Deployment step me ham ise add karenge."
     try:
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         prompt = f"Analyze this social media post and suggest 3 engagement improvements:\n\n{text}"
         response = model.generate_content(prompt)
         return response.text
