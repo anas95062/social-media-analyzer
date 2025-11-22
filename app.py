@@ -8,8 +8,9 @@ import google.generativeai as genai
 app = Flask(__name__)
 
 # TESSERACT CONFIGURATION
-# यह लाइन Tesseract को ढूंढने में मदद करेगी
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Check if running on Windows (Local) or Linux (Render)
+if os.name == 'nt':
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 # GEMINI AI CONFIGURATION
 GENAI_API_KEY = os.environ.get("GEMINI_API_KEY")
