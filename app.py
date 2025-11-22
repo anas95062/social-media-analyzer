@@ -7,15 +7,17 @@ import google.generativeai as genai
 
 app = Flask(__name__)
 
-# TESSERACT CONFIGURATION
-# Check if running on Windows (Local) or Linux (Render)
+# --- CONFIGURATION ---
 if os.name == 'nt':
     pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-# GEMINI AI CONFIGURATION
+# API Key Setup
 GENAI_API_KEY = os.environ.get("GEMINI_API_KEY")
 if GENAI_API_KEY:
-    genai.configure(api_key=GENAI_API_KEY)
+    try:
+        genai.configure(api_key=GENAI_API_KEY)
+    except Exception as e:
+        print(f"Config Error: {e}")
 
 def extract_text(file, filename):
     text = ""
@@ -34,14 +36,23 @@ def extract_text(file, filename):
 
 def analyze_content(text):
     if not GENAI_API_KEY:
-        return "AI Key Missing. Deployment step me ham ise add karenge."
+        return "Error: API Key is missing in Settings."
+
     try:
+        # Using the latest stable model supported by the new library
         model = genai.GenerativeModel('gemini-1.5-flash')
-        prompt = f"Analyze this social media post and suggest 3 engagement improvements:\n\n{text}"
+        
+        prompt = f"""You are a Social Media Expert. Analyze this post content and give 3 actionable tips to improve engagement.
+        
+        Post Content:
+        {text}
+        """
+        
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"AI Error: {str(e)}"
+        # This will show us the REAL error if something goes wrong
+        return f"AI Error Details: {str(e)}"
 
 @app.route('/')
 def home():
@@ -55,10 +66,10 @@ def analyze():
 
     text, error = extract_text(file, file.filename)
     if error: return jsonify({"error": error}), 500
-    if not text.strip(): return jsonify({"error": "No text found."}), 400
+    if not text or not text.strip(): return jsonify({"error": "No text found."}), 400
 
     analysis = analyze_content(text)
     return jsonify({"extracted_text": text, "analysis": analysis})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=10000)
